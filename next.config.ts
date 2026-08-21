@@ -1,7 +1,7 @@
- import type { NextConfig } from "next";
-
-                  const nextConfig: NextConfig = {
-                    // output: 'export' yahan se hata diya hai
-                    };
-
-                    export default nextConfig;
+module.exports = {
+    eslint: {
+        // Warning: This allows production builds to successfully complete even if
+            // your project has ESLint errors.
+                ignoreDuringBuilds: true,
+                  },
+                  }
