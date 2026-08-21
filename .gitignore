@@ -1,0 +1,7 @@
+# build output
+.next/
+out/
+
+# local env files
+.env*.local
+.env
