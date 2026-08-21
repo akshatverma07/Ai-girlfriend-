@@ -21,9 +21,6 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Build Next.js App
-        run: npx next build
-
       - name: Sync Capacitor Android
         run: npx cap sync android
 
@@ -40,7 +37,7 @@ jobs:
           ./gradlew assembleDebug
 
       - name: Upload APK Artifact
-5        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
           name: app-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
