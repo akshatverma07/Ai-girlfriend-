@@ -1,19 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  devIndicators: false,
-    typescript: {
-        ignoreBuildErrors: true,
-          },
-          
-output: 'export',
-  
-    // Agar images ki wajah se export mein issue aaye toh yeh bhi daal sakte ho:
-      images: {
-          unoptimized: true,
-            },
-            };
+  output: 'export', // Yeh line add karni hai
+    // baaki purana code waise hi rehne dena
+    };
 
-            export default nextConfig;
-        
+    export default nextConfig;
+    
         
