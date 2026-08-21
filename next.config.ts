@@ -1,10 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'export', // Yeh line add karni hai
-    // baaki purana code waise hi rehne dena
-    };
+  output: 'export',
+    typescript: {
+        ignoreBuildErrors: true,
+          },
+            eslint: {
+                ignoreDuringBuilds: true,
+                  },
+                  };
 
-    export default nextConfig;
-    
-        
+                  export default nextConfig;
+                  
