@@ -5,7 +5,15 @@ const nextConfig: NextConfig = {
     typescript: {
         ignoreBuildErrors: true,
           },
-          };
-
-          export default nextConfig;
           
+output: 'export',
+  
+    // Agar images ki wajah se export mein issue aaye toh yeh bhi daal sakte ho:
+      images: {
+          unoptimized: true,
+            },
+            };
+
+            export default nextConfig;
+        
+        
