@@ -20,10 +20,7 @@ export async function POST(req: Request) {
     const latestMessage = messages[messages.length - 1]?.content || "";
 
     // 1. Memory uthao
-    const userMemories = await retrieveMemories(DEFAULT_USER_ID, latestMessage);git add .
-    git commit -m "fix retrieveMemories arguments"
-    git push
-    
+    const userMemories = await retrieveMemories(DEFAULT_USER_ID, latestMessage);
 
     // 2. System prompt jismein AI ki identity aur memory di gayi hai
     const systemPrompt = `You are Apinya, a sharp, witty, and secure terminal AI assistant. 
