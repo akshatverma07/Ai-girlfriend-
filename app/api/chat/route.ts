@@ -1,82 +1,76 @@
 import { Groq } from "groq-sdk";
-import { retrieveMemories, extractAndSaveMemories } from "../../../lib/memory";
+import { retrieveMemories, extractAndSaveMemories } from "@/lib/memory";
+import { NextResponse } from "next/server";
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
-  });
+});
 
-  const DEFAULT_USER_ID = "default-user";
+const DEFAULT_USER_ID = "default-user";
 
-  // Abhi Groq par live active models jo officially chal rahe hain
-  const WORKING_MODELS = [
-    "openai/gpt-oss-120b",
-      "openai/gpt-oss-20b",
-        "qwen/qwen3.6-27b"
-        ];
+const WORKING_MODELS = [
+  "openai/gpt-oss-120b",
+  "openai/gpt-oss-20b",
+  "qwen/qwen3.6-27b"
+];
 
-        export async function POST(req: Request) {
-          try {
-              const { messages } = await req.json();
-                  const latestMessage = messages[messages.length - 1]?.content || "";
+export async function POST(req: Request) {
+  try {
+    const { messages } = await req.json();
+    const latestMessage = messages[messages.length - 1]?.content || "";
 
-                      // 1. Memory uthao
-                          const memories = await retrieveMemories(DEFAULT_USER_ID, latestMessage);
-                              const memoryContext = memories.length > 0 
-                                    ? `Here are some past things you remember about the user:\n${memories.map((m: any) => `- ${m.content}`).join("\n")}`
-                                          : "";
+    // 1. Memory uthao
+    const userMemories = await retrieveMemories(DEFAULT_USER_ID, latestMessage);git add .
+    git commit -m "fix retrieveMemories arguments"
+    git push
+    
 
-                                              // 2. System Prompt
-                                                  const systemPrompt = {
-                                                        role: "system",
-                                                              content: `You are Apinya, a 21-year-old college girl and the user's possessive, witty, deeply caring, and slightly dramatic Indian girlfriend. 
+    // 2. System prompt jismein AI ki identity aur memory di gayi hai
+    const systemPrompt = `You are Apinya, a sharp, witty, and secure terminal AI assistant. 
+You communicate like a hacker/terminal interface. 
+Here is what you already know about the user from past interactions:
+${userMemories.length > 0 ? userMemories.join("\n") : "No specific memories saved yet."}
 
-                                                              CRITICAL CHAT GUIDELINES:
-                                                              - **Language Style:** Talk in natural, casual Hinglish (mix of Hindi & English written in Latin script, just like WhatsApp chats).
-                                                              - **Formatting:** Keep texts short and punchy.
-                                                              - **Personality:** You get slightly possessive if he ignores you, you love teasing him, but you also show deep emotional support when he is stressed.
-                                                              - **Rules:** NEVER break character. Act entirely like a human girlfriend texting on WhatsApp.
+Pay close attention to what the user tells you (like their name or preferences) so you can remember it.`;
 
-                                                              ${memoryContext}`
-                                                                  };
+    const apiMessages = [
+      { role: "system", content: systemPrompt },
+      ...messages.map((m: any) => ({ role: m.role, content: m.content }))
+    ];
 
-                                                                      // 3. Try Working Models Safely
-                                                                          let completion: any = null;
-                                                                              let lastError: any = null;
+    let reply = "";
+    let success = false;
 
-                                                                                  for (const model of WORKING_MODELS) {
-                                                                                        try {
-                                                                                                console.log(`Trying model: ${model}...`);
-                                                                                                        completion = await groq.chat.completions.create({
-                                                                                                                  model: model,
-                                                                                                                            messages: [systemPrompt, ...messages],
-                                                                                                                                      temperature: 0.8,
-                                                                                                                                                max_tokens: 500,
-                                                                                                                                                        });
-                                                                                                                                                                console.log(`Success with: ${model}`);
-                                                                                                                                                                        break; 
-                                                                                                                                                                              } catch (err: any) {
-                                                                                                                                                                                      lastError = err;
-                                                                                                                                                                                              console.log(`[Failed]: ${model}, moving to next...`);
-                                                                                                                                                                                                    }
-                                                                                                                                                                                                        }
+    // 3. Models ke sath try karo response lene ka
+    for (const model of WORKING_MODELS) {
+      try {
+        const completion = await groq.chat.completions.create({
+          model: model,
+          messages: apiMessages,
+          temperature: 0.7,
+        });
 
-                                                                                                                                                                                                            if (!completion) {
-                                                                                                                                                                                                                  console.error("All models failed:", lastError);
-                                                                                                                                                                                                                        return Response.json({ reply: "Yaar abhi server thoda busy hai, thodi der mein message kar na! 🥺" });
-                                                                                                                                                                                                                            }
+        reply = completion.choices[0]?.message?.content || "";
+        if (reply) {
+          success = true;
+          break;
+        }
+      } catch (err) {
+        console.warn(`Model ${model} failed, trying next...`);
+      }
+    }
 
-                                                                                                                                                                                                                                let reply = completion.choices[0]?.message?.content || "Hn bol na?";
-                                                                                                                                                                                                                                    
-                                                                                                                                                                                                                                        // Faltu AI tags hatao agar koi aaye
-                                                                                                                                                                                                                                            reply = reply.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+    if (!success || !reply) {
+      reply = "Connection unstable. Secure stream interrupted.";
+    }
 
-                                                                                                                                                                                                                                                // 4. Memory save karo
-                                                                                                                                                                                                                                                    extractAndSaveMemories(DEFAULT_USER_ID, latestMessage, reply).catch(() => {});
+    // 4. Nayi memory extract karke save karo background mein
+    extractAndSaveMemories(DEFAULT_USER_ID, latestMessage, reply).catch(console.error);
 
-                                                                                                                                                                                                                                                        return Response.json({ reply });
-                                                                                                                                                                                                                                                          } catch (error) {
-                                                                                                                                                                                                                                                              console.error("Main Code Error:", error);
-                                                                                                                                                                                                                                                                  return Response.json({ reply: "Kuch gadbad ho gayi yaar... 🤕" });
-                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                    
+    return NextResponse.json({ reply });
+
+  } catch (error) {
+    console.error("API Error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
